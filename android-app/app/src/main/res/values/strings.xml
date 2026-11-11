@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Study Resource Manager</string>
+    <string name="open_resource_link">Open in browser</string>
+    <string name="share_resource_link">Share link</string>
+    <string name="resource_action_unavailable">No app could handle this action.</string>
 </resources>

@@ -7,7 +7,9 @@ data class StudyResource(
     val author: String,
     val subject: String,
     val source: String,
-    val kind: String
+    val kind: String,
+    val description: String,
+    val url: String
 )
 
 data class StudyNote(
