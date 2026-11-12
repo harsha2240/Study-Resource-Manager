@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -35,13 +33,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyresourcemanager.data.SampleStudyRepository
 import com.example.studyresourcemanager.data.StudyResource
+import com.example.studyresourcemanager.ui.components.ResourceThumbnail
 
 @Composable
 internal fun SearchScreen(
@@ -173,14 +171,11 @@ internal fun ResourceRow(
             Modifier.weight(1f).clickable(onClick = onOpen).padding(vertical = 13.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
+            ResourceThumbnail(
+                url = resource.thumbnailUrl,
+                contentDescription = null,
                 modifier = Modifier.size(width = 42.dp, height = 52.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Accent.copy(alpha = .12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Accent, modifier = Modifier.size(22.dp))
-            }
+            )
             Column(Modifier.weight(1f).padding(start = 12.dp, end = 4.dp)) {
                 Text(resource.title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(resource.author, color = Muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
