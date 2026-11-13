@@ -46,7 +46,7 @@ enum class FailureReason {
     /** No connectivity, DNS failure or timeout. */
     OFFLINE,
 
-    /** The service answered with an HTTP error status. */
+    /** The service refused the request: an HTTP error status, or an error body under HTTP 200. */
     SERVER,
 
     /** A response arrived but could not be read as the expected JSON. */

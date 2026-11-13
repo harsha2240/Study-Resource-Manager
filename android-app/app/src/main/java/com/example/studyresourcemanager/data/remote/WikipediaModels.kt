@@ -9,7 +9,34 @@ import java.net.URLEncoder
  * `query` is absent when the search matched nothing, so it is nullable.
  */
 internal data class WikipediaSearchResponse(
-    @SerializedName("query") val query: WikipediaQuery? = null
+    @SerializedName("query") val query: WikipediaQuery? = null,
+    /**
+     * MediaWiki reports request errors in the body while still answering HTTP 200,
+     * for example `{"error":{"code":"badvalue","info":"..."}}`.
+     */
+    @SerializedName("error") val error: WikipediaError? = null
+)
+
+internal data class WikipediaError(
+    @SerializedName("code") val code: String? = null,
+    @SerializedName("info") val info: String? = null
+)
+
+/**
+ * Raised when Wikipedia answers HTTP 200 but the JSON body carries an `error` object.
+ *
+ * Without this, such a response would be indistinguishable from a genuine search that
+ * matched no articles, so the UI would show "no results" instead of a provider failure.
+ */
+internal class WikipediaServiceException(
+    val code: String?,
+    val info: String?
+) : Exception(
+    buildString {
+        append("Wikipedia API error")
+        code?.let { append(" (").append(it).append(")") }
+        info?.let { append(": ").append(it) }
+    }
 )
 
 internal data class WikipediaQuery(
