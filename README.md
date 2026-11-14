@@ -9,6 +9,9 @@ Open [android-app](android-app) in Android Studio. It was created with the Empty
 Activity (Jetpack Compose) template. The app package is
 `com.example.studyresourcemanager`.
 
+Home, Search, Saved, Notes, Settings, and Resource Details each have their own
+Android Activity. The app opens these activities with explicit intents.
+
 The app contains Home, Search, Saved, and Notes. Enter a query or select a
 subject to search Open Library and Wikipedia. Search starts with a bundled
 sample catalogue and can show matching samples if the online search fails.

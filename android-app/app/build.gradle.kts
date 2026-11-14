@@ -40,7 +40,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.navigation.compose)
     // Resource API stack (Member 1: Retrofit, coroutines, Glide)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gson)
