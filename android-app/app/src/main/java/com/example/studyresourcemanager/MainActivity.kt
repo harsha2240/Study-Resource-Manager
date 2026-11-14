@@ -24,6 +24,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.studyresourcemanager.data.repository.RemoteResourceRepository
+import com.example.studyresourcemanager.data.repository.ResourceSearchResult
 import com.example.studyresourcemanager.data.SampleStudyRepository
 import com.example.studyresourcemanager.data.StudyNote
 import com.example.studyresourcemanager.data.StudyResource
@@ -54,6 +57,7 @@ import com.example.studyresourcemanager.ui.SearchScreen
 import com.example.studyresourcemanager.ui.SettingsScreen
 import com.example.studyresourcemanager.ui.ThemeChoice
 import com.example.studyresourcemanager.ui.theme.StudyResourceManagerTheme
+import kotlinx.coroutines.delay
 
 private data class AppTab(val route: String, val label: String)
 
@@ -75,6 +79,8 @@ class MainActivity : ComponentActivity() {
 private fun StudyResourceApp() {
     val navController = rememberNavController()
     val resources = SampleStudyRepository.resources
+    val resourceRepository = remember { RemoteResourceRepository() }
+    var visitedResources by remember { mutableStateOf(emptyMap<String, StudyResource>()) }
     var savedIds by remember { mutableStateOf(setOf<String>()) }
     var notes by remember { mutableStateOf(emptyList<StudyNote>()) }
     var nextNoteId by remember { mutableIntStateOf(1) }
@@ -88,8 +94,41 @@ private fun StudyResourceApp() {
     var defaultSubject by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedSubject by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
+    var searchResources by remember { mutableStateOf(resources) }
+    var searchLoading by remember { mutableStateOf(false) }
+    var searchError by remember { mutableStateOf<String?>(null) }
+    var showingSampleFallback by remember { mutableStateOf(false) }
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
+
+    LaunchedEffect(currentRoute, query, selectedSubject) {
+        if (currentRoute != "search") return@LaunchedEffect
+
+        if (query.isBlank() && selectedSubject == null) {
+            searchResources = resources
+            searchLoading = false
+            searchError = null
+            showingSampleFallback = false
+            return@LaunchedEffect
+        }
+
+        searchLoading = true
+        searchError = null
+        showingSampleFallback = false
+        searchResources = emptyList()
+        if (query.isNotBlank()) delay(350)
+
+        when (val result = resourceRepository.search(query, selectedSubject)) {
+            is ResourceSearchResult.Success -> searchResources = result.resources
+            ResourceSearchResult.Empty -> searchResources = emptyList()
+            is ResourceSearchResult.Failure -> {
+                searchError = result.message
+                searchResources = resourceRepository.sampleFallback(query, selectedSubject)
+                showingSampleFallback = searchResources.isNotEmpty()
+            }
+        }
+        searchLoading = false
+    }
 
     fun navigateTab(route: String) {
         if (currentRoute == route) return
@@ -111,9 +150,12 @@ private fun StudyResourceApp() {
     }
 
     fun openResource(resource: StudyResource) {
+        visitedResources = visitedResources + (resource.id to resource)
         recentIds = ArrayList((listOf(resource.id) + recentIds.filterNot { it == resource.id }).take(5))
         navController.navigate("resource/${Uri.encode(resource.id)}") { launchSingleTop = true }
     }
+
+    fun findResource(id: String?): StudyResource? = visitedResources[id] ?: resources.find { it.id == id }
 
     val darkTheme = when (theme) {
         ThemeChoice.SYSTEM -> isSystemInDarkTheme()
@@ -179,7 +221,7 @@ private fun StudyResourceApp() {
                         onSubject = ::browse,
                         featured = resources.first { it.id == "algorithms" },
                         nextToRead = resources.first { it.id == "computer-networks" },
-                        recent = recentIds.mapNotNull { id -> resources.find { it.id == id } },
+                        recent = recentIds.mapNotNull(::findResource),
                         savedIds = savedIds,
                         onOpen = ::openResource,
                         onBookmark = ::toggleSaved
@@ -187,26 +229,32 @@ private fun StudyResourceApp() {
                 }
                 composable("search") {
                     SearchScreen(
-                        resources = resources,
+                        resources = searchResources,
                         savedIds = savedIds,
                         query = query,
                         onQueryChange = { query = it },
                         selectedSubject = selectedSubject,
                         onSubjectChange = { selectedSubject = it },
                         onOpen = ::openResource,
-                        onToggleSaved = ::toggleSaved
+                        onToggleSaved = { resource ->
+                            visitedResources = visitedResources + (resource.id to resource)
+                            toggleSaved(resource.id)
+                        },
+                        isLoading = searchLoading,
+                        errorMessage = searchError,
+                        showingSampleFallback = showingSampleFallback
                     )
                 }
                 composable("bookmarks") {
                     SavedScreen(
-                        resources = resources.filter { it.id in savedIds },
+                        resources = savedIds.mapNotNull(::findResource),
                         onRemove = ::toggleSaved,
                         onOpen = ::openResource,
                         onDiscover = { browse(defaultSubject) }
                     )
                 }
                 composable("resource/{resourceId}") { entry ->
-                    val resource = resources.find { it.id == entry.arguments?.getString("resourceId") }
+                    val resource = findResource(entry.arguments?.getString("resourceId"))
                     ResourceDetailsScreen(
                         resource = resource,
                         isSaved = resource != null && resource.id in savedIds,

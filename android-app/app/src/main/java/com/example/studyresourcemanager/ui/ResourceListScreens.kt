@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,15 +51,11 @@ internal fun SearchScreen(
     selectedSubject: String?,
     onSubjectChange: (String?) -> Unit,
     onOpen: (StudyResource) -> Unit,
-    onToggleSaved: (String) -> Unit
+    onToggleSaved: (StudyResource) -> Unit,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
+    showingSampleFallback: Boolean = false
 ) {
-    val filteredResources = resources.filter { resource ->
-        val matchesQuery = query.isBlank() || listOf(resource.title, resource.author, resource.subject, resource.source)
-            .any { it.contains(query.trim(), ignoreCase = true) }
-        val matchesSubject = selectedSubject == null || resource.subject == selectedSubject
-        matchesQuery && matchesSubject
-    }
-
     Column(Modifier.fillMaxSize().background(Paper).padding(horizontal = 20.dp, vertical = 24.dp)) {
         SectionLabel("DISCOVER")
         Spacer(Modifier.height(8.dp))
@@ -96,7 +93,30 @@ internal fun SearchScreen(
         SectionLabel(if (query.isBlank() && selectedSubject == null) "SAMPLE LIBRARY" else "SEARCH RESULTS")
         Spacer(Modifier.height(4.dp))
         LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 12.dp)) {
-            if (filteredResources.isEmpty()) {
+            if (isLoading) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        Text("Searching online libraries…", color = Muted, fontSize = 13.sp, modifier = Modifier.padding(start = 10.dp))
+                    }
+                }
+            }
+            if (errorMessage != null) {
+                item {
+                    Text(
+                        if (showingSampleFallback) "$errorMessage Showing bundled sample matches instead."
+                        else errorMessage,
+                        color = Muted,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
+            }
+            if (resources.isEmpty() && !isLoading && errorMessage == null) {
                 item {
                     Text(
                         "No resources match that search. Try another title or subject.",
@@ -106,12 +126,12 @@ internal fun SearchScreen(
                     )
                 }
             }
-            items(filteredResources, key = { it.id }) { resource ->
+            items(resources, key = { it.id }) { resource ->
                 ResourceRow(
                     resource = resource,
                     isSaved = resource.id in savedIds,
                     onOpen = { onOpen(resource) },
-                    onBookmark = { onToggleSaved(resource.id) }
+                    onBookmark = { onToggleSaved(resource) }
                 )
             }
         }

@@ -9,6 +9,10 @@ Open [android-app](android-app) in Android Studio. It was created with the Empty
 Activity (Jetpack Compose) template. The app package is
 `com.example.studyresourcemanager`.
 
-The current UI milestone contains Home, Search, Saved, and Notes destinations.
-API and Room-backed content will be connected through shared models and
-repositories when the team agrees on those interfaces.
+The app contains Home, Search, Saved, and Notes. Enter a query or select a
+subject to search Open Library and Wikipedia. Search starts with a bundled
+sample catalogue and can show matching samples if the online search fails.
+Results can be opened in the app, bookmarked, or opened in a browser.
+
+Bookmarks and notes are stored in memory for the current app session. Room
+persistence is pending.
