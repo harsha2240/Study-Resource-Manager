@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.studyresourcemanager.R
 import com.example.studyresourcemanager.data.StudyResource
+import com.example.studyresourcemanager.ui.components.ResourceThumbnail
 
 @Composable
 internal fun ResourceDetailsScreen(
@@ -50,6 +53,15 @@ internal fun ResourceDetailsScreen(
         if (resource == null) {
             Text("This resource is unavailable.", color = Muted)
             return@Column
+        }
+
+        // Remote catalogues supply a cover; sample data has none, so no empty block is shown.
+        if (!resource.thumbnailUrl.isNullOrBlank()) {
+            ResourceThumbnail(
+                url = resource.thumbnailUrl,
+                contentDescription = resource.title,
+                modifier = Modifier.fillMaxWidth().height(190.dp)
+            )
         }
 
         SectionLabel(resource.subject.uppercase())

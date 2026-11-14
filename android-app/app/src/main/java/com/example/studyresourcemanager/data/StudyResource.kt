@@ -9,7 +9,9 @@ data class StudyResource(
     val source: String,
     val kind: String,
     val description: String,
-    val url: String
+    val url: String,
+    /** Cover/thumbnail URL supplied by the remote catalogue; null when the source has no image. */
+    val thumbnailUrl: String? = null
 )
 
 data class StudyNote(
