@@ -1,4 +1,4 @@
-﻿package com.example.studyresourcemanager
+package com.example.studyresourcemanager
 
 import android.app.Application
 import androidx.compose.runtime.getValue
@@ -49,6 +49,7 @@ internal class StudySession(application: Application) {
         set(value) {
             _defaultSubject = value
             prefs.setDefaultSubject(value)
+            selectedSubject = value
         }
 
     var selectedSubject by mutableStateOf<String?>(prefs.getDefaultSubject())
