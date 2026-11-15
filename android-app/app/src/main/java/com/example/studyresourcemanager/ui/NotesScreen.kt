@@ -1,4 +1,4 @@
-package com.example.studyresourcemanager.ui
+﻿package com.example.studyresourcemanager.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -31,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,12 +42,13 @@ import com.example.studyresourcemanager.data.StudyNote
 @Composable
 internal fun NotesScreen(
     notes: List<StudyNote>,
+    defaultSubject: String? = null,
     onAdd: (String, String, String) -> Unit,
     onEdit: (StudyNote) -> Unit,
     onDelete: (Int) -> Unit
 ) {
     var title by rememberSaveable { mutableStateOf("") }
-    var subject by rememberSaveable { mutableStateOf("") }
+    var subject by rememberSaveable(defaultSubject) { mutableStateOf(defaultSubject.orEmpty()) }
     var body by rememberSaveable { mutableStateOf("") }
     var editingId by rememberSaveable { mutableStateOf<Int?>(null) }
     var selectedSubject by rememberSaveable { mutableStateOf<String?>(null) }
@@ -58,7 +57,7 @@ internal fun NotesScreen(
     val visibleNotes = notes.asReversed().filter { activeSubject == null || it.subject == activeSubject }
     val editing = notes.firstOrNull { it.id == editingId }
     if (editing != null) {
-        EditNoteDialog(editing, onDismiss = { editingId = null }) {
+        EditNoteDialog(editing, defaultSubject = defaultSubject, onDismiss = { editingId = null }) {
             onEdit(it)
             editingId = null
         }
@@ -105,10 +104,10 @@ internal fun NotesScreen(
             )
             Button(
                 onClick = {
-                    onAdd(title.trim(), subject.trim().ifBlank { "General" }, body.trim())
+                    onAdd(title.trim(), subject.trim().ifBlank { defaultSubject ?: "General" }, body.trim())
                     selectedSubject = null
                     title = ""
-                    subject = ""
+                    subject = defaultSubject.orEmpty()
                     body = ""
                 },
                 enabled = canSave,
@@ -116,7 +115,7 @@ internal fun NotesScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Accent)
             ) { Text("SAVE NOTE") }
             Spacer(Modifier.height(22.dp))
-            SectionLabel("YOUR NOTES · ${visibleNotes.size}")
+            SectionLabel("YOUR NOTES - ${visibleNotes.size}")
             if (subjects.size > 1) {
                 Row(
                     Modifier.horizontalScroll(rememberScrollState()),
@@ -164,7 +163,12 @@ internal fun NotesScreen(
 }
 
 @Composable
-private fun EditNoteDialog(note: StudyNote, onDismiss: () -> Unit, onSave: (StudyNote) -> Unit) {
+private fun EditNoteDialog(
+    note: StudyNote,
+    defaultSubject: String?,
+    onDismiss: () -> Unit,
+    onSave: (StudyNote) -> Unit
+) {
     var title by rememberSaveable(note.id) { mutableStateOf(note.title) }
     var subject by rememberSaveable(note.id) { mutableStateOf(note.subject) }
     var body by rememberSaveable(note.id) { mutableStateOf(note.body) }
@@ -182,7 +186,7 @@ private fun EditNoteDialog(note: StudyNote, onDismiss: () -> Unit, onSave: (Stud
         confirmButton = {
             TextButton(
                 enabled = title.isNotBlank() && body.isNotBlank(),
-                onClick = { onSave(note.copy(title = title.trim(), subject = subject.trim().ifBlank { "General" }, body = body.trim())) }
+                onClick = { onSave(note.copy(title = title.trim(), subject = subject.trim().ifBlank { defaultSubject ?: "General" }, body = body.trim())) }
             ) { Text("Save changes") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
