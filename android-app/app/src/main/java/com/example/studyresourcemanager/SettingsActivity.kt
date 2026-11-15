@@ -12,10 +12,7 @@ class SettingsActivity : StudyActivity() {
             onThemeChange = { session.theme = it },
             subjects = SampleStudyRepository.subjects,
             defaultSubject = session.defaultSubject,
-            onSubjectChange = {
-                session.defaultSubject = it
-                session.selectedSubject = it
-            },
+            onSubjectChange = { session.defaultSubject = it },
             onBack = ::finish
         )
     }

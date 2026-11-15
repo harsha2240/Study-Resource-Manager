@@ -80,6 +80,12 @@ internal class StudySession(application: Application) {
         recent = (listOf(resource) + recent.filterNot { it.id == resource.id }).take(5)
     }
 
+    fun findResource(id: String?): StudyResource? = id?.let { resourceId ->
+        savedResources[resourceId]
+            ?: recent.find { it.id == resourceId }
+            ?: resources.find { it.id == resourceId }
+    }
+
     fun toggleSaved(resource: StudyResource) {
         if (resource.id in savedIds) {
             removeBookmark(resource.id)
